@@ -77,43 +77,79 @@
     var panier = {};
   } else {
     panier = JSON.parse(localStorage.getItem("panier"));
+    // Mettre à jour le texte du bouton panier dès le chargement
+    MettreAJourCompteurPanier(panier);
   }
+
+  // 2. Écouteur d'événement sur les boutons "Ajouter" (.Ajout)
   $(document).on("click", ".Ajout", function () {
     console.log("clicked");
     var item_id = this.id.toString();
+
+    // Si le produit est déjà dans le panier, on incrémente sa quantité [0]
     if (panier[item_id] != undefined) {
-      quantity = panier[item_id][0] + 1;
-      panier[item_id] = quantity;
+      panier[item_id][0] = panier[item_id][0] + 1; // <--- On met directement à jour la quantité dans le tableau
     } else {
-      quantity = 1;
-      name = document.getElementById("aa" + item_id).innerHTML;
+      // Sinon, on l'ajoute avec une quantité de 1 et son nom [1]
+      var quantity = 1;
+      var nameElement = document.getElementById("aa" + item_id);
+      var name = nameElement ? nameElement.innerHTML.trim() : "Produit";
       panier[item_id] = [quantity, name];
     }
-    console.log(panier);
+    console.log("Panier actuel :", panier);
+
+    // Sauvegarde dans le localStorage
     localStorage.setItem("panier", JSON.stringify(panier));
-    document.getElementById("panier-link").innerHTML =
-      "Panier(" + Object.keys(panier).length + ")";
-    console.log(Object.keys(panier).length);
+
+    // Mettre à jour le compteur sur le bouton
+    MettreAJourCompteurPanier(panier);
+
+    // Mettre à jour le contenu de la bulle (popover)
+    AfficherList(panier);
   });
+  // Afficher la liste et initialiser le popover au chargement initial de la page
   AfficherList(panier);
+
+  // Fonction pour mettre à jour le texte du bouton Panier
+  function MettreAJourCompteurPanier(panier) {
+    let totalItems = 0;
+    for (let x in panier) {
+      // On vérifie si c'est bien un tableau [quantité, nom]
+      if (Array.isArray(panier[x])) {
+        totalItems += panier[x][0];
+      } else {
+        // Fallback si la donnée est un vieux format (un simple chiffre)
+        totalItems += Number(panier[x]) || 0;
+      }
+    }
+    document.getElementById("panier-link").innerHTML =
+      "Panier(" + totalItems + ")";
+  }
+
   function AfficherList(panier) {
     var panierString = "";
     panierString += "<h5> Voici votre liste </h5>";
     var index = 1;
     for (var x in panier) {
-      panierString += index;
-      panierString +=
-        document.getElementById("aa" + x).innerHTML +
-        " Qte: " +
-        panier[x][0] +
-        "<br>";
+      panierString += index + ". ";
+      // On récupère le nom stocké dans le panier directement (plus robuste)
+      // Si le produit est affiché sur la page, on peut aussi l'utiliser, sinon on prend le panier[x][1]
+      var nomProduit = panier[x][1];
+      var qteProduit = panier[x][0];
+      panierString += nomProduit + " Qte: " + qteProduit + "<br>";
       index += 1;
     }
     panierString += "<a href='/checkout' class='btn btn-primary'>Checkout</a>";
-    $('[data-toggle="popover"]').popover();
-    document
-      .getElementById("panier-link")
-      .setAttribute("data-content", panierString);
+    // ÉTAPE CLÉ : On détruit l'ancien popover pour forcer Bootstrap à prendre le nouveau HTML
+    $("#panier-link").popover("dispose");
+
+    // On recrée le popover proprement
+    $("#panier-link").popover({
+      html: true,
+      container: "body",
+      placement: "bottom",
+      content: panierString,
+    });
   }
 </script>
 
