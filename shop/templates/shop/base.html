@@ -99,5 +99,11 @@ sagittis lacus vel augue laoreet rutrum faucibus."
       {% block content %} {% endblock %}
     </div>
   </body>
-  {%block js %} {%endblock %}
+  {%block js %}
+  <script>
+    $(document).ready(function () {
+      $('[data-toggle="popover"]').popover();
+    });
+  </script>
+  {%endblock %}
 </html>
